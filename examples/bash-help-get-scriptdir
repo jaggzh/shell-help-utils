@@ -1,0 +1,17 @@
+#!/usr/bin/env -S display_file_shell -s
+#!/bin/bash
+ourdir="$(dirname "$(readlink -f "$0")")"
+ourname="${ourdir##*/}"
+
+if [[ "$#" -lt 1 ]]; then
+	cat <<-"EOT"
+		Usage: $ourname video.mp4 [framecount]
+		* To just show information, don't specify a framecount
+	EOT
+	exit
+fi
+
+if [[ "$#" -eq 1 ]]; then
+	"$bin_vid" "$vidfn"
+	exit
+fi

@@ -1,0 +1,56 @@
+#!/bin/bash
+. ansi.sh
+. fn.readcountdown
+
+display_file() {
+    local timeout=30 syntax filename syncol
+
+    while getopts "l:t:s:" opt; do
+        case ${opt} in
+            l) syntax="${OPTARG}" ;;
+            t) timeout="${OPTARG}" ;;
+            s) syncol=1 ;;
+            \?) echo "Invalid option: -$OPTARG" >&2; return 1 ;;
+            :) echo "Option -$OPTARG requires an argument." >&2; return 1 ;;
+        esac
+    done
+    shift $((OPTIND -1))
+
+    # If -l is not present, read the second line of the file (assuming it's the shebang)
+    echo "Syntax: {$syntax}"
+    filename="$1"
+	echo "Filename: {$filename}"
+    if [[ -z "$syntax" ]]; then
+        read -r shebang < <(sed -n '2p' "$filename")
+        echo "Shebang: {$shebang}"
+        # Parse out the language from the shebang
+        case "$shebang" in
+            *bin/bash*) syntax="bash" ;;
+            *python*) syntax="python" ;;
+            *bin/perl*) syntax="perl" ;;
+            *) syntax="" ;;  # default
+        esac
+    fi
+    echo "Syntax: {$syntax}"
+
+    # Save file content into a variable
+    local content=$(tail -n +2 "$filename")
+
+    # Highlight and display the file (excluding the first two lines)
+    if [[ $syntax = '' ]]; then
+		printf '%s' "$content"
+	else
+		if [[ -z syncol ]];  then
+			printf '%s' "$content" | source-highlight -f esc256 -o STDOUT -O truecolor -s "$syntax"
+		else
+			printf '%s' "$content" | highlight -S "$syntax" -O truecolor
+		fi
+	fi
+    echo
+
+    # Prompt for copy to clipboard
+    readcountdown1 "$timeout" ans "${yele}Copy to clipboard?$rste (${timeout}s) (Y/${bcyae}n$rste) "
+    [[ $ans = '' || $ans = y* || $ans = Y* ]] && printf '%s' "$content" | xc && echo "Copied to clipboard"
+}
+
+display_file "$@"
