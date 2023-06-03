@@ -17,33 +17,33 @@ display_file() {
     shift $((OPTIND -1))
 
     # If -l is not present, read the second line of the file (assuming it's the shebang)
-    echo "Syntax: {$syntax}"
+    # echo "Syntax: {$syntax}"
     filename="$1"
-	echo "Filename: {$filename}"
+	# echo "Filename: {$filename}"
     if [[ -z "$syntax" ]]; then
         read -r shebang < <(sed -n '2p' "$filename")
-        echo "Shebang: {$shebang}"
+        # echo "Shebang: {$shebang}"
         # Parse out the language from the shebang
         case "$shebang" in
             *bin/bash*) syntax="bash" ;;
-            *python*) syntax="python" ;;
+            *python2) syntax="python2" ;;
+            *python*) syntax="python3" ;;
             *bin/perl*) syntax="perl" ;;
             *) syntax="" ;;  # default
         esac
     fi
-    echo "Syntax: {$syntax}"
 
     # Save file content into a variable
     local content=$(tail -n +2 "$filename")
 
     # Highlight and display the file (excluding the first two lines)
     if [[ $syntax = '' ]]; then
-		printf '%s' "$content"
+		printf '%s' "$content" >&2
 	else
 		if [[ -z syncol ]];  then
-			printf '%s' "$content" | source-highlight -f esc256 -o STDOUT -O truecolor -s "$syntax"
+			printf '%s' "$content" | source-highlight -f esc256 -o STDOUT -O truecolor -s "$syntax" >&2
 		else
-			printf '%s' "$content" | highlight -S "$syntax" -O truecolor
+			printf '%s' "$content" | highlight -S "$syntax" -O truecolor >&2
 		fi
 	fi
     echo
