@@ -3,41 +3,59 @@
 . fn.readcountdown
 
 display_file() {
-    local timeout=30 syntax filename syncol
+	local timeout=30 syntax filename syncol verbose highlight_cmd
 
-    while getopts "l:t:s:" opt; do
-        case ${opt} in
-            l) syntax="${OPTARG}" ;;
-            t) timeout="${OPTARG}" ;;
-            s) syncol=1 ;;
-            \?) echo "Invalid option: -$OPTARG" >&2; return 1 ;;
-            :) echo "Option -$OPTARG requires an argument." >&2; return 1 ;;
-        esac
-    done
-    shift $((OPTIND -1))
+	while getopts "c:l:t:s:v" opt; do
+		case ${opt} in
+			c) highlight_cmd="${OPTARG}" ;;
+			l) syntax="${OPTARG}" ;;
+			t) timeout="${OPTARG}" ;;
+			s) syncol=1 ;;
+			v) verbose=1 ;;
+			\?) echo "Invalid option: -$OPTARG" >&2; return 1 ;;
+			:) echo "Option -$OPTARG requires an argument." >&2; return 1 ;;
+		esac
+	done
+	shift $((OPTIND -1))
 
-    # If -l is not present, read the second line of the file (assuming it's the shebang)
-    # echo "Syntax: {$syntax}"
-    filename="$1"
+	# If -l is not present, read the second line of the file (assuming it's the shebang)
+	# echo "Syntax: {$syntax}"
+	filename="$1"
 	# echo "Filename: {$filename}"
-    if [[ -z "$syntax" ]]; then
-        read -r shebang < <(sed -n '2p' "$filename")
-        # echo "Shebang: {$shebang}"
-        # Parse out the language from the shebang
-        case "$shebang" in
-            *bin/bash*) syntax="bash" ;;
-            *python2) syntax="python2" ;;
-            *python*) syntax="python3" ;;
-            *bin/perl*) syntax="perl" ;;
-            *) syntax="" ;;  # default
-        esac
-    fi
 
-    # Save file content into a variable
-    local content=$(tail -n +2 "$filename")
+		##################################################
+		## Syntax coming from -l option
+	if [[ -n "$syntax" ]]; then
+		case "$syntax" in
+			*python*) syntax="python" ;;
+		esac
+	else
+		##################################################
+		## No syntax, so try to determine from shebang
+		[[ -n $verbose ]] && {
+			echo -n "Running sed: "
+			sed -n '2p' "$filename"
+		}
+		[[ -n $verbose ]] && echo "Done. Getting shebang from line 2..."
+		read -r shebang < <(sed -n '2p' "$filename")
+		[[ -n $verbose ]] && echo "Shebang: {$shebang}"
+		# Parse out the language from the shebang
+		case "$shebang" in
+			*bin/bash*) syntax="bash" ;;
+			*python*) syntax="python" ;;
+			*bin/perl*) syntax="perl" ;;
+			*)	echo "Unknown shebang. Setting blank syntax." >&2
+				syntax=""
+				;;
+		esac
+		[[ -n $verbose ]] && echo "Syntax chosen: $syntax"
+	fi
 
-    # Highlight and display the file (excluding the first two lines)
-    if [[ $syntax = '' ]]; then
+	# Save file content into a variable
+	local content=$(tail -n +2 "$filename")
+
+	# Highlight and display the file (excluding the first two lines)
+	if [[ $syntax = '' ]]; then
 		printf '%s' "$content" >&2
 	else
 		if [[ -z syncol ]];  then
@@ -46,11 +64,11 @@ display_file() {
 			printf '%s' "$content" | highlight -S "$syntax" -O truecolor >&2
 		fi
 	fi
-    echo
+	echo
 
-    # Prompt for copy to clipboard
-    readcountdown1 "$timeout" ans "${yele}Copy to clipboard?$rste (${timeout}s) (Y/${bcyae}n$rste) "
-    [[ $ans = '' || $ans = y* || $ans = Y* ]] && printf '%s' "$content" | xc && echo "Copied to clipboard"
+	# Prompt for copy to clipboard
+	readcountdown1 "$timeout" ans "${yele}Copy to clipboard?$rste (${timeout}s) (Y/${bcyae}n$rste) "
+	[[ $ans = '' || $ans = y* || $ans = Y* ]] && printf '%s' "$content" | xc && echo "Copied to clipboard" >&2
 }
 
 display_file "$@"
