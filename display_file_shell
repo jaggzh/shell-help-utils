@@ -67,7 +67,7 @@ display_file() {
 	echo
 
 	# Prompt for copy to clipboard
-	readcountdown1 "$timeout" ans "${yele}Copy to clipboard?$rste (${timeout}s) (Y/${bcyae}n$rste) "
+	readcountdown1 "$timeout" ans "${yel}Copy to clipboard?$rst (${timeout}s) (Y/${bcya}n$rst) "
 	[[ $ans = '' || $ans = y* || $ans = Y* ]] && printf '%s' "$content" | xc && echo "Copied to clipboard" >&2
 }
 
