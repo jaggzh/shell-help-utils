@@ -31,6 +31,7 @@ usage () {
 	-c) highlight_cmd  Override (not implemented)
 	-l) syntax     Language
 	-t) timeout    Prompt for copy-to-clibpard (def 30)
+	-C) nocopy     Don't prompt or copy to clipboard
 	-s) syncol     Set to anything to use gnu syntax-highlight
 	-h) help
 	-E) evaluate   Show all themes (for `highlight` only)
@@ -41,11 +42,12 @@ EOT
 display_file() {
 	local timeout=30 syntax filename syncol verbose highlight_cmd
 
-	while getopts "c:l:t:s:hEv" opt; do
+	while getopts "c:l:t:Cs:hEv" opt; do
 		case ${opt} in
 			c) highlight_cmd="${OPTARG}" ;;
 			l) syntax="${OPTARG}" ;;
 			t) timeout="${OPTARG}" ;;
+			C) nocopy=1 ;;
 			s) syncol=1 ;;
 			h) help=1 ;;
 			E) evaluate=1 ;;
@@ -123,8 +125,10 @@ display_file() {
 	echo
 
 	# Prompt for copy to clipboard
-	readcountdown1 "$timeout" ans "$bgblu${yel} Copy to clipboard? (${timeout}s) $rst (Y/${bcya}n$rst) "
-	[[ $ans = '' || $ans = y* || $ans = Y* ]] && printf '%s' "$content" | xc && echo "Copied to clipboard" >&2
+	if [[ -z $nocopy ]]; then
+		readcountdown1 "$timeout" ans "$bgblu${yel} Copy to clipboard? (${timeout}s) $rst (Y/${bcya}n$rst) "
+		[[ $ans = '' || $ans = y* || $ans = Y* ]] && printf '%s' "$content" | xc && echo "Copied to clipboard" >&2
+	fi
 }
 
 display_file "$@"
