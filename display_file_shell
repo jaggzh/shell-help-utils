@@ -2,6 +2,9 @@
 . ansi.sh
 . fn.readcountdown
 
+# echo "$@"
+# exit
+
 # highlight --styles
 #   Lang prefs:
 #     python candidates
@@ -23,19 +26,21 @@ get_themes_hi () {
 }
 
 
-eval=1
 eval=
+theme_preview=1
+theme_preview=
 
 usage () {
 	cat <<EOT
 	-c) highlight_cmd  Override (not implemented)
-	-l) syntax     Language
-	-t) timeout    Prompt for copy-to-clibpard (def 30)
-	-C) nocopy     Don't prompt or copy to clipboard
-	-s) syncol     Set to anything to use gnu syntax-highlight
+	-l) syntax         Language
+	-t) timeout        Prompt for copy-to-clibpard (def 30)
+	-e) eval           Eval doc str to expand vars (not impl)
+	-C) nocopy         Don't prompt or copy to clipboard
+	-s) syncol         Set to anything to use gnu syntax-highlight
 	-h) help
-	-E) evaluate   Show all themes (for `highlight` only)
-	-v) verbose    No you shhh.
+	-T) theme preview  Show all themes (for `highlight` only)
+	-v) verbose        No you shhh.
 EOT
 }
 
@@ -47,10 +52,11 @@ display_file() {
 			c) highlight_cmd="${OPTARG}" ;;
 			l) syntax="${OPTARG}" ;;
 			t) timeout="${OPTARG}" ;;
+			e) eval="${OPTARG}" ;;
 			C) nocopy=1 ;;
 			s) syncol=1 ;;
 			h) help=1 ;;
-			E) evaluate=1 ;;
+			T) themepreview=1 ;;
 			v) verbose=1 ;;
 			\?) echo "Invalid option: -$OPTARG" >&2; return 1 ;;
 			:) echo "Option -$OPTARG requires an argument." >&2; return 1 ;;
@@ -104,7 +110,7 @@ display_file() {
 			printf '%s' "$content" | source-highlight -f esc256 -o STDOUT -s "$syntax" --style-file esc256.style >&2
 		else
 			theme=$hi_theme
-			if [[ -z $eval ]]; then
+			if [[ -z $theme_preview ]]; then
 				printf '%s' "$content" |
 					highlight -S "$syntax" \
 						--style "$theme" \
