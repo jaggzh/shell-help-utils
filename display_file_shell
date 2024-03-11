@@ -26,21 +26,41 @@ get_themes_hi () {
 }
 
 
-eval=
+opt_eval=
 theme_preview=1
 theme_preview=
 
 usage () {
-	cat <<EOT
-	-c) highlight_cmd  Override (not implemented)
-	-l) syntax         Language
-	-t) timeout        Prompt for copy-to-clibpard (def 30)
-	-e) eval           Eval doc str to expand vars (not impl)
-	-C) nocopy         Don't prompt or copy to clipboard
-	-s) syncol         Set to anything to use gnu syntax-highlight
-	-h) help
-	-T) theme preview  Show all themes (for `highlight` only)
-	-v) verbose        No you shhh.
+	cat <<'EOT'
+This is used to make a runnable script that's a displayable document.
+  * Displays current script body on the screen
+  * Has a countdown timer to copy the script body to the clipboard (default)
+  * Allows language selecting and does syntax highlighting
+
+Generally, just use this she-bang to make the script into a document:
+  #!/usr/bin/env -S display_file_shell
+or, for example, for perl:
+  #!/usr/bin/env -S display_file_shell -l perl
+
+More info:
+When used as a script's shell, display_file_shell will display the CONTENTS of
+the current script, with syntax highlighting, and allow it to be copied to the
+clipboard automatically.
+
+(Shells generally aren't callable with the she-bang (#! without
+being added to the system, so for end-user use you most likely
+want to use the /usr/bin/env she-bang line above)
+
+Options to display_file_shell:
+    -l) syntax         Language
+    -c) highlight_cmd  Override (not implemented)
+    -t) timeout        Prompt for copy-to-clibpard (def 30)
+    -e) eval           Eval doc str to expand vars (not implemented)
+    -C) nocopy         Don't prompt or copy to clipboard
+    -s) syncol         Set to anything to use gnu syntax-highlight
+    -h) help
+    -T) theme preview  Show all themes (for `highlight` only)
+    -v) verbose        No you shhh.
 EOT
 }
 
@@ -52,7 +72,7 @@ display_file() {
 			c) highlight_cmd="${OPTARG}" ;;
 			l) syntax="${OPTARG}" ;;
 			t) timeout="${OPTARG}" ;;
-			e) eval="${OPTARG}" ;;
+			e) opt_eval="${OPTARG}" ;;
 			C) nocopy=1 ;;
 			s) syncol=1 ;;
 			h) help=1 ;;
