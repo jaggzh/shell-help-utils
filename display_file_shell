@@ -1,9 +1,16 @@
 #!/bin/bash
+# ansi.sh from: https://gist.github.com/jaggzh/6b3746475bbde5a077dfaeae793b7d1f
 . ansi.sh
+# fn.readcountdown from: https://gist.github.com/jaggzh/a66f35114ac0c0b3201f43ec09b10f22
 . fn.readcountdown
 
 # echo "$@"
 # exit
+
+# We're using:
+# highlight -S "$syntax" \
+# 	--style neon \
+# 	-O truecolor >&2
 
 # highlight --styles
 #   Lang prefs:
@@ -31,7 +38,7 @@ theme_preview=1
 theme_preview=
 
 usage () {
-	cat <<'EOT'
+	cat <<"EOT"
 This is used to make a runnable script that's a displayable document.
   * Displays current script body on the screen
   * Has a countdown timer to copy the script body to the clipboard (default)
