@@ -36,6 +36,7 @@ get_themes_hi () {
 opt_eval=
 theme_preview=1
 theme_preview=
+nocopy=
 
 usage () {
 	cat <<"EOT"
@@ -63,6 +64,11 @@ Options to display_file_shell:
     -c) highlight_cmd  Override (not implemented)
     -t) timeout        Prompt for copy-to-clibpard (def 30)
     -e) eval           Eval doc str to expand vars (not implemented)
+    -T) pretend terminal  Piping:
+                           disables color,
+                           asking to copy to clipboard,
+                           and the stderr duplication of the output
+                          This allows them again.
     -C) nocopy         Don't prompt or copy to clipboard
     -s) syncol         Set to anything to use gnu syntax-highlight
     -h) help
@@ -70,16 +76,19 @@ Options to display_file_shell:
     -v) verbose        No you shhh.
 EOT
 }
+opt_terminal=0
+opt_do_highlighting=1
 
 display_file() {
 	local timeout=30 syntax filename syncol verbose highlight_cmd
 
-	while getopts "c:l:t:Cs:hEv" opt; do
+	while getopts "c:l:t:TCs:hEv" opt; do
 		case ${opt} in
 			c) highlight_cmd="${OPTARG}" ;;
 			l) syntax="${OPTARG}" ;;
 			t) timeout="${OPTARG}" ;;
 			e) opt_eval="${OPTARG}" ;;
+			T) opt_terminal="${OPTARG}" ;;
 			C) nocopy=1 ;;
 			s) syncol=1 ;;
 			h) help=1 ;;
@@ -91,6 +100,14 @@ display_file() {
 	done
 	shift $((OPTIND -1))
 	if [[ -n $help ]]; then usage; exit; fi
+
+	if [[ ! -t 1 ]]; then # stdout not a terminal
+		if [[ "$opt_terminal" = 0 ]]; then # Standard behavior for piping: Disable copy and highlighting
+			nocopy=1
+			opt_do_highlighting=0
+		fi
+	fi
+
 
 	# If -l is not present, read the second line of the file (assuming it's the shebang)
 	# echo "Syntax: {$syntax}"
@@ -129,7 +146,9 @@ display_file() {
 	local content=$(tail -n +2 "$filename")
 
 	# Highlight and display the file (excluding the first two lines)
-	if [[ $syntax = '' ]]; then
+	if [[ "$opt_do_highlighting" = 0 ]]; then
+		printf '%s' "$content"
+	elif [[ $syntax = '' ]]; then
 		printf '%s' "$content" >&2
 	else
 		if [[ -z syncol ]];  then
@@ -157,8 +176,7 @@ display_file() {
 	fi
 	echo
 
-	# Prompt for copy to clipboard
-	if [[ -z $nocopy ]]; then
+	if [[ "$nocopy" != 1 ]]; then
 		readcountdown1 "$timeout" ans "$bgblu${yel} Copy to clipboard? (${timeout}s) $rst (Y/${bcya}n$rst) "
 		[[ $ans = '' || $ans = y* || $ans = Y* ]] && printf '%s' "$content" | xc && echo "Copied to clipboard" >&2
 	fi
