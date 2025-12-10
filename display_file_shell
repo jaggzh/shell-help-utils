@@ -153,23 +153,27 @@ display_file() {
 	else
 		if [[ -z syncol ]];  then
 			#printf '%s' "$content" | source-highlight -f esc256 -o STDOUT -O truecolor -s "$syntax" --style-file esc256.style >&2
-			printf '%s' "$content" | source-highlight -f esc256 -o STDOUT -s "$syntax" --style-file esc256.style >&2
+			high_cmd=(source-highlight -f esc256 -o STDOUT -s "$syntax" --style-file esc256.style)
+			[[ -n $verbose ]] && echo "Highlight command: {${high_cmd[@]}}"
+			printf '%s' "$content" | "${high_cmd[@]}" >&2
 		else
 			theme=$hi_theme
 			if [[ -z $theme_preview ]]; then
-				printf '%s' "$content" |
-					highlight -S "$syntax" \
-						--style "$theme" \
-						-O truecolor >&2
+				high_cmd=(highlight -S "$syntax"
+						--style "$theme"
+						-O truecolor)
+				[[ -n $verbose ]] && echo "Highlight command: {${high_cmd[@]}}"
+				printf '%s' "$content" | "${high_cmd[@]}" >&2
 			else
 				themes=(${themes_hi_python[@]})
 				# themes=($(get_themes_hi))
 				for theme in "${themes[@]}"; do
 					echo "$bgblu${yel} ==== Theme: $theme  $rst"
-					printf '%s' "$content" |
-						highlight -S "$syntax" \
-							--style "$theme" \
-							-O truecolor >&2
+					high_cmd=(highlight -S "$syntax"
+							--style "$theme"
+							-O truecolor)
+					[[ -n $verbose ]] && echo "Highlight command: {${high_cmd[@]}}"
+					printf '%s' "$content" | "${high_cmd[@]}" >&2
 				done
 			fi
 		fi
